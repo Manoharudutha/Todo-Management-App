@@ -7,17 +7,42 @@
     <link href="./css/styles.css" rel="stylesheet" type="text/css" />
     <title>To-Do Manager</title>
     <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+      function updateTodo(id) {
+        fetch(`/todos/${id}/markAsCompleted`, {
+          method: "put",
+          header: { "Content-Type": "application/json" },
+        })
+          .then((res) => window.location.reload())
+          .catch((error) => console.error(error));
+      }
+
+      const deleteTodo = (id) => {
+        fetch("todos/" + id, {
+          method: "delete",
+          header: { "Content-Type": "application/json" },
+        })
+          .then((res) => {
+            if (res.ok) window.location.reload();
+          })
+          .catch(error);
+        {
+          console.error(error);
+        }
+      };
+    </script>
   </head>
   <header></header>
   <body>
     <div class="grid grid-cols-6">
       <div class="col-start-3 col-span-2">
         <%- include('header.ejs') %>
-        <form>
+        <form action="/todos" method="POST">
           <div class="flex gap-2 py-4">
             <div class="flex-auto">
               <input
                 type="text"
+                name="title"
                 placeholder="What's next?"
                 class="rounded border border-gray-600 text-gray-900 p-2 text-sm w-full"
                 required
@@ -26,6 +51,7 @@
             <div class="flex-auto">
               <input
                 type="date"
+                name="dueDate"
                 class="rounded border border-gray-600 text-gray-900 p-2 text-sm w-full leading-4"
               />
             </div>
