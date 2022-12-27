@@ -3,8 +3,14 @@ const app = express();
 const { Todo } = require("./models");
 const bodyParser = require("body-parser");
 const { response } = require("express");
+const csrf = require("tiny-csrf");
+const cookieParser = require("cookie-parser");
+
 app.use(bodyParser.json());
 app.use(express.urlencoded({ extended: false }));
+app.use(cookieParser("shh! some secret string"));
+app.use(csrf("32_chars_key_for_csrf_protection", ["POST", "PUT", "DELETE"]));
+
 const path = require("path");
 
 app.set("view engine", "ejs");
@@ -13,28 +19,24 @@ app.get("/", async (request, response) => {
   const overdueTodos = await Todo.getOverdueTodos();
   const dueTodayTodos = await Todo.getDueTodayTodos();
   const dueLaterTodos = await Todo.getDueLaterTodos();
-  const todosCount = await Todo.getTodosCount();
 
   if (request.accepts("html")) {
     response.render("index", {
       overdueTodos,
       dueTodayTodos,
       dueLaterTodos,
-      todosCount,
+      csrfToken: request.csrfToken(),
     });
   } else {
     response.json({
-      allTodos,
+      overdueTodos,
+      dueTodayTodos,
+      dueLaterTodos,
     });
   }
 });
 
 app.use(express.static(path.join(__dirname, "public")));
-
-/* Sequelize-cli(Without UI) endpoints/route using express.js: */
-// app.get("/", function (request, response) {
-//   response.send("Hello World");
-// });
 
 app.get("/todos", async function (_request, response) {
   console.log("Processing list of all Todos ...");
@@ -65,9 +67,7 @@ app.post("/todos", async function (request, response) {
     });
     return response.redirect("/");
   } catch (error) {
-    console.log("sdfsf");
     console.log(error);
-    console.log("Creating a new todo...: " + request.body);
     return response.status(422).json(error);
   }
 });
