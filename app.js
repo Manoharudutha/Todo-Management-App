@@ -16,15 +16,33 @@ const path = require("path");
 app.set("view engine", "ejs");
 
 app.get("/", async (request, response) => {
+  const getCompletedTodos = (x) => x.completed == true;
+  const getInCompleteTodos = (x) => x.completed == false;
+
   const overdueTodos = await Todo.getOverdueTodos();
   const dueTodayTodos = await Todo.getDueTodayTodos();
   const dueLaterTodos = await Todo.getDueLaterTodos();
+
+  const inCompletedOverdueTodos = overdueTodos.filter(getInCompleteTodos);
+  const inCompletedDueTodayTodos = dueTodayTodos.filter(getInCompleteTodos);
+  const inCompletedDueLaterTodos = dueLaterTodos.filter(getInCompleteTodos);
+
+  const completedTodos = overdueTodos
+    .filter(getCompletedTodos)
+    .concat(
+      await dueTodayTodos.filter(getCompletedTodos),
+      await dueLaterTodos.filter(getCompletedTodos)
+    );
 
   if (request.accepts("html")) {
     response.render("index", {
       overdueTodos,
       dueTodayTodos,
       dueLaterTodos,
+      inCompletedOverdueTodos,
+      inCompletedDueTodayTodos,
+      inCompletedDueLaterTodos,
+      completedTodos,
       csrfToken: request.csrfToken(),
     });
   } else {
@@ -32,6 +50,10 @@ app.get("/", async (request, response) => {
       overdueTodos,
       dueTodayTodos,
       dueLaterTodos,
+      inCompletedOverdueTodos,
+      inCompletedDueTodayTodos,
+      inCompletedDueLaterTodos,
+      completedTodos,
     });
   }
 });
@@ -72,10 +94,10 @@ app.post("/todos", async function (request, response) {
   }
 });
 
-app.put("/todos/:id/markAsCompleted", async function (request, response) {
+app.put("/todos/:id", async function (request, response) {
   const todo = await Todo.findByPk(request.params.id);
   try {
-    const updatedTodo = await todo.markAsCompleted();
+    const updatedTodo = await todo.setCompletionStatus(todo.completed);
     return response.json(updatedTodo);
   } catch (error) {
     console.log(error);
