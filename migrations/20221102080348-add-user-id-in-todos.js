@@ -10,13 +10,13 @@ module.exports = {
       fields: ["userID"],
       type: "foreign key",
       references: {
-        table: "User",
+        table: "Users",
         field: "id",
       },
     });
   },
 
   async down(queryInterface, Sequelize) {
-    await queryInterface.removeColumn("Todos", "userID");
+    await queryInterface.removeColumn("Todos", "userId");
   },
 };
