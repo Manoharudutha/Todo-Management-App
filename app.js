@@ -229,7 +229,7 @@ app.post("/users", async (request, response) => {
   }
   const user = await User.findOne({ where: { email: request.body.email } });
   if (user) {
-    request.flash("error", "A user with this email address already exis!t");
+    request.flash("error", "A user with this email address already exist!");
     return response.redirect("/signup");
   }
   console.log(request.body.password.length);
